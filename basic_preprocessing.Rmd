@@ -1,0 +1,132 @@
+```{r}
+library(dplyr)
+library(skimr)
+library(rsample)
+library(tidyr)
+```
+
+```{r}
+starwars
+```
+
+```{r}
+skim(starwars)
+```
+
+```{r}
+data <- starwars %>%
+  select(height,mass,gender)
+```
+
+```{r}
+data
+```
+
+```{r}
+data_split <- initial_split(data)
+```
+
+```{r}
+data_train <- training(data_split)
+data_test <- testing(data_split)
+```
+```{r}
+data_train<-data_train %>%
+  mutate(BMI = mass/(height*height))
+```
+
+```{r}
+data_train
+```
+
+```{r}
+skim(data_train)
+```
+
+```{r}
+any(is.na(data_train))
+```
+
+```{r}
+colSums(is.na(data_train))
+```
+
+```{r}
+data_train_im <- data_train %>%
+  drop_na(height,gender) %>%
+  mutate(mass = ifelse(is.na(mass),mean(mass,na.rm = T),mass),
+        BMI  = ifelse(is.na(BMI),mean(BMI,na.rm = T),BMI))
+```
+
+```{r}
+data_train_im
+```
+Encoding categorical data 
+```{r}
+iris
+```
+
+```{r}
+skim(iris)
+```
+
+```{r}
+iris %>%
+  mutate(Species=as.integer(Species))
+
+```
+
+```{r}
+iris %>%
+  mutate(Sp_versicolor = ifelse(Species=="versicolor",1,0),
+         Sp_virginica = ifelse(Species=="virginica",1,0))%>%
+  select(-Species)
+```
+
+```{r}
+data_train_im
+```
+
+```{r}
+skim(data_train_im)
+```
+
+```{r}
+data_train_im_en <- data_train_im %>%
+  mutate(gender_masculine = ifelse(gender=="masculine",1,0))%>%
+  select(-gender)
+```
+
+```{r}
+data_train_im_en
+```
+feature Scaling
+```{r}
+normalise <- function(feature){
+  (feature - mean(feature))/sd(feature)
+}
+```
+
+```{r}
+data_train_im_en_no <- data_train_im_en %>%
+  mutate_all(normalise)
+```
+Creating a complete Preprocessing pipeline in a single code 
+```{r}
+data_train<-data_train %>%
+  mutate(BMI = mass/(height*height)) %>%
+  drop_na(height,gender) %>%
+  mutate(mass = ifelse(is.na(mass),mean(mass,na.rm = T),mass),
+        BMI  = ifelse(is.na(BMI),mean(BMI,na.rm = T),BMI))%>%
+   mutate(gender_masculine = ifelse(gender=="masculine",1,0))%>%
+  select(-gender)%>%
+  mutate_all(normalise)
+  
+data_train
+```
+
+```{r}
+waldo ::compare(data_train,data_train_im_en_no)
+```
+
+
